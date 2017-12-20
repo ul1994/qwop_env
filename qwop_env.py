@@ -53,6 +53,8 @@ DIST_SIZE = (260, 80) # X, Y
 
 EXTRA_TERMS = 2
 
+ACTION_TIME = 0.5
+
 class QWOPEnv(gym.Env):
 	metadata = {
 		'render.modes': ['human', 'rgb_array'],
@@ -93,21 +95,25 @@ class QWOPEnv(gym.Env):
 		self.observation_space = spaces.Box(low, high)
 
 		plt.ion()
-		plt.figure(figsize=(6, 7))
+		fig, axes = plt.subplots(2, 1, figsize=(6, 7))
+		axes = axes.flatten()
+		self.axes = axes
 		plt.show()
 
 		pos_approved = False
 		while not pos_approved:
 			im = self.get_screenshot()
-			plt.subplot(211)
-			plt.imshow(im)
-			plt.subplot(212)
+			axes[0].imshow(im)
 			distIm = self.crop_dist_img(im)
-			plt.imshow(distIm)
+			axes[1].imshow(distIm)
 			plt.tight_layout()
 			plt.show()
 			plt.pause(0.01)
 			pos_approved = input('[Is game in position? (y/n)]:').strip() == 'y'
+
+		print('PLEASE PLACE CURSOR IN GAME.')
+		print('STARTING IN 5 SECONDS!')
+		time.sleep(5.0)
 
 		self._seed()
 		self.reset()
@@ -130,18 +136,29 @@ class QWOPEnv(gym.Env):
 
 	def get_distance(self, img):
 		distImg = self.crop_dist_img(img)
-		dist = pytesseract.image_to_string(Image.fromarray(distImg), config='outputbase digits')
-		dist = dist.split(' ')[0]
+		dist0 = pytesseract.image_to_string(Image.fromarray(distImg), config='outputbase digits')
+		dist = dist0.split(' ')[0]
+		try:
+			dist = float(dist)
+		except:
+			print('===BADSTR===:%s:' % dist0)
+
 		return float(dist)
 
 	def _step(self, action):
 		currentImg = self.get_screenshot()
 		distBefore = self.get_distance(currentImg)
 		# TODO: get current distance
-		self.keypress(action, sleeptime=0.2)
+		self.keypress(action, sleeptime=ACTION_TIME)
 		# TODO: get distance travelled
 		resultImg = self.get_screenshot()
 		distAfter = self.get_distance(resultImg)
+
+		self.axes[0].imshow(resultImg)
+		self.axes[1].imshow(self.crop_dist_img(resultImg))
+		plt.tight_layout()
+		plt.pause(0.01)
+		plt.show()
 
 		diff = distAfter - distBefore
 		reward = np.sign(diff) * (diff) ** 2.0
@@ -149,7 +166,7 @@ class QWOPEnv(gym.Env):
 		didFall = self.check_failPopup(resultImg)
 		done = didFall
 
-		print ('%.1f > %.1f : Done-%s' % (distBefore, distAfter, str(done)))
+		print ('%.1f > %.1f: Rew-%.1f Done-%s' % (distBefore, distAfter, reward, str(done)))
 		return np.array(self.state), reward, done, {}
 
 	def _reset(self):
