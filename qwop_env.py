@@ -40,6 +40,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 
+from qwop_config import config
+sys.path.append(config['pose_path'])
+from infer_img import pose_img
+
 logger = logging.getLogger(__name__)
 
 NUM_JOINTS = 7
@@ -50,9 +54,7 @@ POPUP_POS = (362, 290) # X, Y
 DIST_POS = (440, 50) # X, Y
 DIST_SIZE = (260, 80) # X, Y
 # SCALE_PIX = 2
-
 EXTRA_TERMS = 2
-
 ACTION_TIME = 0.5
 
 class QWOPEnv(gym.Env):

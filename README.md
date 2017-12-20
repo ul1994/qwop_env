@@ -1,4 +1,9 @@
 
+
+symlink qwop_env.py to your gym/envs folder
+
+ln -s qwop/infer_img.py tf-openpose/infer_img.py
+
 modify classic_control/__init__.py to have
 
 from gym.envs.classic_control.qwop_env import QWOPEnv
