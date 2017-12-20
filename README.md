@@ -1,4 +1,5 @@
 
+Set OPENPOSE_MODEL env var
 
 symlink qwop_env.py to your gym/envs folder
 

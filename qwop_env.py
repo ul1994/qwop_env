@@ -42,7 +42,7 @@ from PIL import Image
 
 from qwop_config import config
 sys.path.append(config['pose_path'])
-from infer_img import pose_img
+import infer_img
 
 logger = logging.getLogger(__name__)
 
@@ -156,11 +156,15 @@ class QWOPEnv(gym.Env):
 		resultImg = self.get_screenshot()
 		distAfter = self.get_distance(resultImg)
 
-		self.axes[0].imshow(resultImg)
+		poseImg = infer_img.pose_img(resultImg)
+
+
+		self.axes[0].imshow(poseImg)
 		self.axes[1].imshow(self.crop_dist_img(resultImg))
 		plt.tight_layout()
 		plt.pause(0.01)
 		plt.show()
+
 
 		diff = distAfter - distBefore
 		reward = np.sign(diff) * (diff) ** 2.0

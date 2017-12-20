@@ -21,7 +21,10 @@ config.gpu_options.allow_growth = True
 
 # POSE EST MODEL
 input_node = tf.placeholder(tf.float32, shape=(1, 368, 368, 3), name='image')
+
+POSE_SESSION = None
 with tf.Session(config=config) as sess:
+	POSE_SESSION = sess
 	net, _, last_layer = get_network('mobilenet', input_node, sess)
 
 def pose_img(image):
