@@ -138,7 +138,9 @@ class QWOPEnv(gym.Env):
 
 	def get_distance(self, img):
 		distImg = self.crop_dist_img(img)
-		dist0 = pytesseract.image_to_string(Image.fromarray(distImg), config='outputbase digits')
+		# dist0 = pytesseract.image_to_string(Image.fromarray(distImg), config='outputbase digits')
+		dist0 = pytesseract.image_to_string(Image.fromarray(distImg), config='-c tessedit_char_whitelist=0123456789-. -psm 6')
+		# dist0 = pytesseract.image_to_string(Image.fromarray(distImg), config='outputbase digits')
 		dist = dist0.split(' ')[0]
 		try:
 			dist = float(dist)
@@ -156,10 +158,13 @@ class QWOPEnv(gym.Env):
 		resultImg = self.get_screenshot()
 		distAfter = self.get_distance(resultImg)
 
+		# cv2.resize()
+
 		poseImg = infer_img.pose_img(resultImg)
 
 
 		self.axes[0].imshow(poseImg)
+		# self.axes[0].imshow(resultImg)
 		self.axes[1].imshow(self.crop_dist_img(resultImg))
 		plt.tight_layout()
 		plt.pause(0.01)

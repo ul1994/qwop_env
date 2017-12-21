@@ -22,16 +22,21 @@ config.gpu_options.allow_growth = True
 # POSE EST MODEL
 input_node = tf.placeholder(tf.float32, shape=(1, 368, 368, 3), name='image')
 
-POSE_SESSION = None
-with tf.Session(config=config) as sess:
-	POSE_SESSION = sess
-	net, _, last_layer = get_network('mobilenet', input_node, sess)
+# POSE_SESSION = None
+# with  as sess:
+POSE_SESSION = tf.Session(config=config)
+net, _, last_layer = get_network('mobilenet', input_node, POSE_SESSION)
 
 def pose_img(image):
+	# size = 924
+	image = image[:, 227:-227, :-1]
+	# # image = cv2.resize(image, (184, 184))
+	image = cv2.resize(image, (368, 368))
+	image = cv2.GaussianBlur(image,(7,7), 2)
 	a = time.time()
 	run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
 	run_metadata = tf.RunMetadata()
-	pafMat, heatMat = sess.run(
+	pafMat, heatMat = POSE_SESSION.run(
 		[
 			net.get_output(name=last_layer.format(stage=6, aux=1)),
 			net.get_output(name=last_layer.format(stage=6, aux=2))
@@ -44,7 +49,7 @@ def pose_img(image):
 	avg = 0
 	for _ in range(10):
 		a = time.time()
-		sess.run(
+		POSE_SESSION.run(
 			[
 				net.get_output(name=last_layer.format(stage=6, aux=1)),
 				net.get_output(name=last_layer.format(stage=6, aux=2))
@@ -53,5 +58,6 @@ def pose_img(image):
 		avg += time.time() - a
 	a = time.time()
 	humans = estimate_pose(heatMat, pafMat)
-	process_img = CocoPoseLMDB.display_image(image, heatMat, pafMat, as_numpy=True)
-	return process_img
+	# process_img = CocoPoseLMDB.display_image(image, heatMat, pafMat, as_numpy=True)
+	image = draw_humans(image, humans)
+	return image
